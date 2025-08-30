@@ -25,25 +25,26 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v3
-        with:
-          min-wrapper-count: 1
-          allow-snapshots: false
-        continue-on-error: true  # avoid failing on transient network errors
-
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build & Test
         run: ./gradlew --no-daemon clean build
 
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Upload test report for Pages
+        if: always() # even if tests fail
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: test-reports
-          if-no-files-found: warn
-          path: |
-            **/build/test-results/test/*.xml
-            **/build/reports/tests/test/**
+          path: build/reports/tests/test
+
+  deploy-pages:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
