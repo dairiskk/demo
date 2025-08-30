@@ -1,0 +1,68 @@
+stages:
+  - test
+  - pages
+
+# ---- Global CI vars & caching ----
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"   # cache Gradle between jobs
+
+cache:
+  key: gradle-cache
+  paths:
+    - .gradle/
+    - build/
+
+# ---- 1) Run tests + generate Allure into ./public ----
+test:
+  stage: test
+  image: eclipse-temurin:21-jdk
+  before_script:
+    - chmod +x ./gradlew
+    - apt-get update -y
+    - apt-get install -y curl unzip nodejs npm
+    - npm install -g allure-commandline
+    - java -version
+    - ./gradlew --version
+  script:
+    # Run tests (JUnit XML + Gradle HTML + Allure raw results)
+    - ./gradlew clean test
+
+    # Generate Allure HTML site into ./public (required for GitLab Pages)
+    - mkdir -p public
+    - allure generate --clean build/allure-results --output public
+
+    # (Optional) also publish Gradle's default HTML report under /gradle-report
+    - mkdir -p public/gradle-report
+    - cp -r build/reports/tests/test/* public/gradle-report/ || true
+
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - build/test-results/test/
+      - build/reports/tests/test/
+      - build/allure-results/
+      - public/                         # Pages job will reuse this
+    reports:
+      junit:
+        - build/test-results/test/*.xml
+  rules:
+    # Run for pushes and merge requests
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ---- 2) Publish ./public as GitLab Pages ----
+pages:
+  stage: pages
+  image: alpine:3.20
+  needs: ["test"]
+  script:
+    - ls -la public || (echo "public/ missing; ensure tests ran and Allure generated" && exit 1)
+  artifacts:
+    when: always
+    paths:
+      - public
+  rules:
+    # Only publish from the default branch (auto-detects main/master)
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
