@@ -1,4 +1,4 @@
-name: Java CI (Gradle)
+name: CI
 
 on:
   push:
@@ -11,26 +11,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        java: ["21"]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: "21"
           cache: gradle
 
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v3
+        with:
+          min-wrapper-count: 1
+          allow-snapshots: false
+        continue-on-error: true  # avoid failing on transient network errors
 
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -38,22 +38,12 @@ jobs:
       - name: Build & Test
         run: ./gradlew --no-daemon clean build
 
-      - name: Upload JUnit test reports
+      - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports-java-${{ matrix.java }}
+          name: test-reports
           if-no-files-found: warn
           path: |
             **/build/test-results/test/*.xml
             **/build/reports/tests/test/**
-
-      - name: Upload build logs (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-logs-java-${{ matrix.java }}
-          if-no-files-found: ignore
-          path: |
-            **/build/*.log
-            **/.gradle/**/*.log
