@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class UserControllerTests {
+class UserApiTests {
 
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
