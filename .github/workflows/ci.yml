@@ -13,8 +13,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout
@@ -31,14 +29,27 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build & Test
-        run: ./gradlew --no-daemon clean build
+        run: ./gradlew --no-daemon clean test
 
-      # Upload the HTML test report folder (contains index.html)
-      - name: Upload test report for Pages
+      # Install Allure CLI to generate the static site
+      - name: Install Allure CLI
+        run: |
+          sudo npm i -g allure-commandline --unsafe-perm=true
+          allure --version
+
+      # Generate the pretty HTML report from test results
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          mkdir -p build/allure-results
+          allure generate --clean build/allure-results --output allure-report
+
+      # Publish to GitHub Pages
+      - name: Upload Allure Report for Pages
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/reports/tests/test
+          path: allure-report
 
   deploy-pages:
     needs: build
@@ -48,10 +59,9 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: github-pages                 # <— REQUIRED
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment                   # <— exposes page_url
+        id: deployment
         uses: actions/deploy-pages@v4
