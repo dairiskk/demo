@@ -1,6 +1,5 @@
 package com.example.demo.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,26 +11,38 @@ import jakarta.validation.constraints.Size;
 })
 public class User {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // ✅ Required by JPA and for new User()
+    public User() {}
+
+    // (Optional) convenience constructor
+    public User(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank @Size(max = 50)
+    // Optional profile fields
     private String firstName;
-
-    @NotBlank
-    @Size(max = 50)
     private String lastName;
 
-    @NotBlank @Email
-    @Size(max = 100)
+    @NotBlank
+    @Email
+    @Column(nullable = false, length = 100)
     private String email;
 
     @NotBlank
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // accept in requests, never return in responses
+    @Size(min = 6, max = 255)
+    @Column(nullable = false)
     private String password;
 
-    // getters & setters
+    // Getters/setters...
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }

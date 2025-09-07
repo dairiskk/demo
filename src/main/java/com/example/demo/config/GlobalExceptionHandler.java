@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
@@ -127,6 +129,16 @@ public class GlobalExceptionHandler {
         body.put("message", message);
         body.put("path", path);
         return body;
+    }
+
+    @ExceptionHandler({ NoHandlerFoundException.class, NoResourceFoundException.class })
+    public ResponseEntity<Map<String, Object>> handleNotFound(Exception ex, HttpServletRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 404);
+        body.put("error", "Not Found");
+        body.put("message", "No handler for " + request.getRequestURI());
+        body.put("path", request.getRequestURI());
+        return ResponseEntity.status(404).body(body);
     }
 
     private static String pathOf(ConstraintViolation<?> v) {
