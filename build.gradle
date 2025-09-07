@@ -38,6 +38,11 @@ dependencies {
 
 	compileOnly 'org.projectlombok:lombok:1.18.34'
 	annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+	//enables http://localhost:8080/actuator http://localhost:8080/actuator/metrics
+	implementation "org.springframework.boot:spring-boot-starter-actuator"
+	runtimeOnly "io.micrometer:micrometer-registry-prometheus" // or another registry
+
 }
 
 tasks.named('test') {
