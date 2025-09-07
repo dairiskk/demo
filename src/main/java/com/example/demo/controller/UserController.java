@@ -1,3 +1,4 @@
+// src/main/java/com/example/demo/controller/UserController.java
 package com.example.demo.controller;
 
 import com.example.demo.entity.User;
@@ -6,7 +7,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 
 import java.util.List;
 
@@ -34,39 +34,31 @@ public class UserController {
     }
 
     // POST /api/users
-    // - validates body (@Valid uses constraints from your User entity)
-    // - on duplicate email, GlobalExceptionHandler (if you added it) will map to 409 Conflict
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@Valid @RequestBody User user, @RequestHeader(value = "Host", required = false) String host) {
-        // Optional: ensure id isn't provided by clients
-        // if (user.getId() != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "id must not be provided");
-
-        // Optional uniqueness pre-check for nicer message (DB constraint still enforced)
+    public User create(@Valid @RequestBody User user) {
+        // check unique email
         repo.findByEmail(user.getEmail()).ifPresent(u -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         });
-
-        User saved = repo.save(user);
-
-        // Optionally set Location header (not strictly needed for most clients)
-        // ServletUriComponentsBuilder could be used, but keeping dependencies minimal:
-        // If you want Location header support, move to ResponseEntity<User> and set header.
-        return saved;
+        return repo.save(user);
     }
 
     // PUT /api/users/{id}
-    // Partial update: only non-null fields are applied
+    // partial update: only non-null fields applied
     @PutMapping("/{id}")
-    public User update(@PathVariable Long id, @Valid @RequestBody User incoming) {
+    public User update(@PathVariable Long id, @RequestBody User incoming) {
         User existing = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (incoming.getFirstName() != null) existing.setFirstName(incoming.getFirstName());
-        if (incoming.getLastName() != null) existing.setLastName(incoming.getLastName());
+        if (incoming.getFirstName() != null) {
+            existing.setFirstName(incoming.getFirstName());
+        }
+        if (incoming.getLastName() != null) {
+            existing.setLastName(incoming.getLastName());
+        }
 
         if (incoming.getEmail() != null && !incoming.getEmail().equals(existing.getEmail())) {
-            // uniqueness check for nicer error
             repo.findByEmail(incoming.getEmail()).ifPresent(u -> {
                 if (!u.getId().equals(existing.getId())) {
                     throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
