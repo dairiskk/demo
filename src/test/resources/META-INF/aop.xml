@@ -1,0 +1,18 @@
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "https://www.eclipse.org/aspectj/dtd/aspectj_1_5_0.dtd">
+<aspectj>
+    <weaver options="-Xset:avoidFinal=true">
+        <!-- Only weave your application packages -->
+        <include within="com.example.demo..*"/>
+
+        <!-- Never weave frameworks (this is what avoids the crash) -->
+        <!-- This fixes extra errors when running tests in console, just beauty thing -->
+        <exclude within="org.springframework..*"/>
+        <exclude within="org.springframework.boot..*"/>
+        <exclude within="jakarta..*"/>
+        <exclude within="java..*"/>
+        <exclude within="kotlin..*"/>
+    </weaver>
+    <aspects>
+        <!-- Allure doesn’t require declaring aspects here; it uses the agent -->
+    </aspects>
+</aspectj>
