@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MeControllerTests extends BaseIntegrationTest {
 
     @Test
-    void me_requires_auth_401() throws Exception {
-        mockMvc.perform(get("/api/me")).andExpect(status().isUnauthorized());
+    void me_requires_auth_403() throws Exception {
+        mockMvc.perform(get("/api/me")).andExpect(status().isForbidden());
     }
 
     @Test

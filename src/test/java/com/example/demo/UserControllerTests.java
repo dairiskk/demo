@@ -14,11 +14,11 @@ class UserControllerTests extends BaseMvcNoSecurityTest {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                  {"email":"bob@example.com","password":"secret123"}
+                  {"email":"bob1@example.com","password":"secret123"}
                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.email").value("bob@example.com"));
+                .andExpect(jsonPath("$.email").value("bob1@example.com"));
     }
 
     @Test
